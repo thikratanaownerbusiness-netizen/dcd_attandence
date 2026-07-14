@@ -1,0 +1,6 @@
+{
+  "name": "Trainee Attendance Tracker",
+  "description": "ប្រព័ន្ធតាមដានវត្តមានសិក្ខាកាម និងគ្រប់គ្រងឯកសារសិក្ខាសាលា ដោយសុវត្ថិភាព និងរហ័ស",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
