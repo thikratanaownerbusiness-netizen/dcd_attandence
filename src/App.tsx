@@ -16,10 +16,6 @@ import MapTracker from './components/MapTracker';
 import NotificationSettings from './components/NotificationSettings';
 import RealQrCode from './components/RealQrCode';
 
-// Firebase Authentication import
-import { signInWithGoogle, signOutUser, onAuthChange } from './lib/firebaseAuth';
-import { User } from 'firebase/auth';
-
 // Icon imports
 import { 
   Users, CalendarDays, Clock, ShieldCheck, MapPin, Smartphone, 
@@ -155,41 +151,43 @@ const renderVersion1QrCode = (sessionId: string, size: number = 130) => {
   );
 };
 
+interface AppUser {
+  displayName: string;
+  email: string;
+  photoURL?: string;
+}
+
 export default function App() {
-  // Firebase Auth State
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   const [customLogo, setCustomLogo] = useState<string | null>(() => localStorage.getItem('app_custom_logo'));
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = onAuthChange((user, token) => {
-      setCurrentUser(user);
-      setAuthToken(token);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signInWithGoogle();
-      if (result) {
-        console.log("Logged in:", result.user);
-      }
-    } catch (err: any) {
-      console.error("Sign in failed:", err);
-      alert("បរាជ័យក្នុងការចូលប្រព័ន្ធ៖ " + err.message);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === 'ratana' && password === '123') {
+      setCurrentUser({
+        displayName: 'Ratana',
+        email: 'ratana@moeys.gov.kh',
+        photoURL: '', // No photo for this user
+      });
+      setLoginError('');
+    } else {
+      const errorMessage = 'ឈ្មោះអ្នកប្រើប្រាស់ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ!';
+      setLoginError(errorMessage);
+      alert(errorMessage);
     }
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOutUser();
-    } catch (err: any) {
-      console.error("Sign out failed:", err);
-    }
+    setCurrentUser(null);
+    setUsername('');
+    setPassword('');
+    setLoginError('');
   };
 
   // Application State
@@ -711,18 +709,6 @@ export default function App() {
     setScanBlockedInfo(null);
   };
 
-  // Auth Loading and Guard for Trainer Dashboard
-  if (!mobileCheckInSessionId && authLoading) {
-    return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <div className="h-12 w-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-slate-400 text-xs font-bold tracking-wider uppercase font-mono">MoEYS Auth Checking...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!mobileCheckInSessionId && !currentUser) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col items-center justify-center p-4 relative overflow-hidden antialiased font-sans">
@@ -801,19 +787,36 @@ export default function App() {
           </div>
 
           <div className="pt-2">
-            {/* Google Sign In Button */}
-            <button 
-              onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 py-3 px-4 rounded-xl text-xs font-bold transition-all duration-150 shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-            >
-              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5 shrink-0">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-              </svg>
-              <span>Sign In with Google Account</span>
-            </button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block text-left uppercase tracking-wider">ឈ្មោះអ្នកប្រើប្រាស់</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full mt-1 bg-[#1f2937] border border-slate-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+                  placeholder="ratana"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block text-left uppercase tracking-wider">ពាក្យសម្ងាត់</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full mt-1 bg-[#1f2937] border border-slate-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+                  placeholder="••••••••"
+                />
+              </div>
+              {loginError && <p className="text-xs text-red-400 text-center !mt-2">{loginError}</p>}
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-150 shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>ចូលប្រព័ន្ធ</span>
+              </button>
+            </form>
           </div>
 
           <div className="bg-amber-500/5 border border-amber-500/10 p-3.5 rounded-2xl text-left space-y-1.5">
@@ -822,7 +825,7 @@ export default function App() {
               សេចក្តីណែនាំគណនីគ្រប់គ្រងប្រព័ន្ធ
             </h4>
             <p className="text-[10px] text-slate-400 leading-relaxed">
-              សម្រាប់គណនីគ្រប់គ្រងប្រព័ន្ធ សូម Sign In ដោយភ្ជាប់ជាមួយ Google Account ពិតប្រាកដ ឬ Google Drive Account ណាមួយដែលមានការអនុញ្ញាតដើម្បីចូលប្រើប្រាស់ផ្ទាំងបញ្ជា។
+              សម្រាប់គណនីគ្រប់គ្រងប្រព័ន្ធ សូមប្រើប្រាស់គណនីដែលបានផ្តល់ให้ ដើម្បីចូលប្រើប្រាស់ផ្ទាំងបញ្ជា។
             </p>
           </div>
 
