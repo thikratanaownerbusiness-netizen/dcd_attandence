@@ -32,6 +32,17 @@ export const INITIAL_TRAINEES: Trainee[] = [
     shift: 'morning',
     joinedDate: '2026-01-10',
   },
+    {
+    id: 'T-001',
+    nameKh: 'ធិ រត្តនា',
+    nameEn: 'Thik Ratana',
+    studentId: 'ST-2026-022',
+    email: 'ratana.thik@gmail.com',
+    phone: '022 345 678',
+    gender: 'ប្រុស',
+    shift: 'morning',
+    joinedDate: '2026-07-14',
+  },
   {
     id: 'T-002',
     nameKh: 'កែវ ផល្លា',
